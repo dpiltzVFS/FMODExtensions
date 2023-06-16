@@ -4,7 +4,7 @@ using UnityEngine;
 using System.Runtime.InteropServices;
 using System;
 
-public class FMODMusicWCallbacks : MonoBehaviour
+public class FMODMusic : MonoBehaviour
 {
     class TimelineInfo
     {
@@ -49,6 +49,30 @@ public class FMODMusicWCallbacks : MonoBehaviour
     {
         musicInstance.stop(FMOD.Studio.STOP_MODE.IMMEDIATE);
         musicInstance.release();
+    }
+
+    public void PauseMusic()
+    {
+        musicInstance.setPaused(true);
+    }
+
+    public void UnpauseMusic()
+    {
+        musicInstance.setPaused(false);
+    }
+
+    void Update()
+    {
+        if (Input.GetKeyDown(KeyCode.P))
+        {
+           PauseMusic();
+        }
+
+        if (Input.GetKeyDown(KeyCode.U))
+        {
+            UnpauseMusic();
+        }
+
     }
 
     [AOT.MonoPInvokeCallback(typeof(FMOD.Studio.EVENT_CALLBACK))]
