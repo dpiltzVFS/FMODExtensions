@@ -1,4 +1,6 @@
+using System.Collections.Generic;
 using UnityEngine;
+using static TreeEditor.TextureAtlas;
 
 namespace FMODExtensions
 {
@@ -8,53 +10,64 @@ namespace FMODExtensions
         TerrainData ThisTerrainData => thisTerrain.terrainData;
         float[,,] _cachedTerrainAlphamapData;
 
+        Dictionary<string, float> LayerNameToFMODMaterialIDMap = new Dictionary<string, float>();
+
+        float FMODMaterialID;
+
         
 
 
         private void Start()
         {
             _cachedTerrainAlphamapData = ThisTerrainData.GetAlphamaps(0, 0, ThisTerrainData.alphamapWidth, ThisTerrainData.alphamapHeight);
+            LayerNameToFMODMaterialIDMap.Add("FancyGrass", 6f);
+            LayerNameToFMODMaterialIDMap.Add("Dirt", 8f);
+            LayerNameToFMODMaterialIDMap.Add("2_Moss", 7f);
         }
 
         public override void PlayFootstep(RaycastHit hit, float speed)
         {
-            float fmodSurfaceMaterialID = 0;
+            float FMODMaterialID = 0;
 
             if (hit.collider.GeometryHolder.Type == UnityEngine.LowLevelPhysics.GeometryType.Terrain)
             {
-                fmodSurfaceMaterialID = GetDominantLayerIndex();
+                FMODMaterialID = GetDominantLayerIndex();
             }
             else
             {
-                fmodSurfaceMaterialID = GetSurfaceMaterial(hit);
+                FMODMaterialID = GetSurfaceMaterial(hit);
             }
             FMOD.Studio.EventInstance instance = FMODUnity.RuntimeManager.CreateInstance(_footstepEvent);
-            instance.setParameterByName("Material", fmodSurfaceMaterialID);
+            instance.setParameterByName("Material", FMODMaterialID);
             instance.setParameterByName("Speed", speed);
             instance.start();
             instance.set3DAttributes(FMODUnity.RuntimeUtils.To3DAttributes(transform.position));
             instance.release();
         }
 
-        public int GetDominantLayerIndex()
+        public float GetDominantLayerIndex()
         {
             Vector2Int alphamapCoordinates = ConvertToAlphamapCoordinates(transform.position);
 
-            int mostDominantTextureIndex = 0;
-            float greatestTextureWeight = float.MinValue;
-            int textureCount = _cachedTerrainAlphamapData.GetLength(2);
+            int mostDominantLayerIndex = 0;
+            float greatestLayerWeight = float.MinValue;
+            int LayerCount = _cachedTerrainAlphamapData.GetLength(2);
 
-            for (int textureIndex = 0; textureIndex < textureCount; textureIndex++)
+            for (int LayerIndex = 0; LayerIndex < LayerCount; LayerIndex++)
             {
-                float textureWeight = _cachedTerrainAlphamapData[alphamapCoordinates.y, alphamapCoordinates.x, textureIndex];
+                float LayerWeight = _cachedTerrainAlphamapData[alphamapCoordinates.y, alphamapCoordinates.x, LayerIndex];
 
-                if (textureWeight > greatestTextureWeight)
+                if (LayerWeight > greatestLayerWeight)
                 {
-                    greatestTextureWeight = textureWeight;
-                    mostDominantTextureIndex = textureIndex;
+                    greatestLayerWeight = LayerWeight;
+                    mostDominantLayerIndex = LayerIndex;
                 }
             }
-            return mostDominantTextureIndex;
+            string textureName = ThisTerrainData.terrainLayers[mostDominantLayerIndex].name;
+            LayerNameToFMODMaterialIDMap.TryGetValue(textureName, out float FMODMaterialID);
+            Debug.Log("dominate layer = " + textureName);
+
+            return FMODMaterialID;
         }
 
         private Vector2Int ConvertToAlphamapCoordinates(Vector3 worldPosition)
