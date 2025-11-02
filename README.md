@@ -13,7 +13,7 @@ Unity 2021.3+. Will likely work on earlier versions but this is the version I te
 ## Installation
 Use the Package Manager and use Add package from git URL, using the following: 
 ```
-https://github.com/qhenshaw/FMODExtensions.git
+https://github.com/dpiltzVFS/FMODExtensions.git
 ```
 
 ## Usage
@@ -31,3 +31,6 @@ The parameter is intended to be a reference to the surface the character is stan
 Optionally, surface parameters can be added to walkable colliders. New surface materials can be created through:  
 ```Right Click => Create => FMOD => FMOD Surface Material```  
 Any collider can then reference the material through the ```FMODSurface``` component. This allows surface types represented by a float to be sent to FMOD events using the parameter name ```Material```.
+
+#### Footsteps with terrain support
+```FMODFootstepOnTerrain``` is a subclass of ```FMODFootsteps``` which enables sending FMOD values based on the dominate terrain layer.
