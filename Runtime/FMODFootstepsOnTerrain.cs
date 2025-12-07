@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using UnityEngine;
-using static TreeEditor.TextureAtlas;
 
 namespace FMODExtensions
 {
@@ -12,37 +11,60 @@ namespace FMODExtensions
 
         Dictionary<string, float> LayerNameToFMODMaterialIDMap = new Dictionary<string, float>();
 
-        float FMODMaterialID;
-
-        
-
-
         private void Start()
         {
             _cachedTerrainAlphamapData = ThisTerrainData.GetAlphamaps(0, 0, ThisTerrainData.alphamapWidth, ThisTerrainData.alphamapHeight);
-            LayerNameToFMODMaterialIDMap.Add("FancyGrass", 6f);
-            LayerNameToFMODMaterialIDMap.Add("Dirt", 8f);
-            LayerNameToFMODMaterialIDMap.Add("2_Moss", 7f);
+            LayerNameToFMODMaterialIDMap.Add("0_Rock", 0f);
+            LayerNameToFMODMaterialIDMap.Add("1_Soil", 3f);
+            LayerNameToFMODMaterialIDMap.Add("2_Moss", 5f);
+            LayerNameToFMODMaterialIDMap.Add("3_Mud", 2f);
         }
 
-        public override void PlayFootstep(RaycastHit hit, float speed)
+        public override void PlayFootstep(GameObject floorObject, bool overTerrain, float speed)
         {
-            float FMODMaterialID = 0;
+            if(!_footstepEvent.IsNull)
+            {
+                float FMODMaterialIndex = 0;
 
-            if (hit.collider.GeometryHolder.Type == UnityEngine.LowLevelPhysics.GeometryType.Terrain)
-            {
-                FMODMaterialID = GetDominantLayerIndex();
+                if (overTerrain)
+                {
+                    FMODMaterialIndex = GetDominantLayerIndex();
+                }
+                else
+                {
+                    FMODMaterialIndex = GetSurfaceMaterial(floorObject);
+                }
+                FMOD.Studio.EventInstance instance = FMODUnity.RuntimeManager.CreateInstance(_footstepEvent);
+                instance.setParameterByName("Material", FMODMaterialIndex);
+                instance.setParameterByName("Speed", speed);
+                instance.start();
+                instance.set3DAttributes(FMODUnity.RuntimeUtils.To3DAttributes(transform.position));
+                instance.release();
             }
-            else
+            
+        }
+
+        public override void PlayLand(GameObject floorObject, bool overTerrain, float speed)
+        {
+            if (!_landEvent.IsNull)
             {
-                FMODMaterialID = GetSurfaceMaterial(hit);
+                float FMODMaterialID = 0;
+
+                if (overTerrain)
+                {
+                    FMODMaterialID = GetDominantLayerIndex();
+                }
+                else
+                {
+                    FMODMaterialID = GetSurfaceMaterial(floorObject);
+                }
+                FMOD.Studio.EventInstance instance = FMODUnity.RuntimeManager.CreateInstance(_landEvent);
+                instance.setParameterByName("Material", FMODMaterialID);
+                instance.setParameterByName("Speed", speed);
+                instance.start();
+                instance.set3DAttributes(FMODUnity.RuntimeUtils.To3DAttributes(transform.position));
+                instance.release();
             }
-            FMOD.Studio.EventInstance instance = FMODUnity.RuntimeManager.CreateInstance(_footstepEvent);
-            instance.setParameterByName("Material", FMODMaterialID);
-            instance.setParameterByName("Speed", speed);
-            instance.start();
-            instance.set3DAttributes(FMODUnity.RuntimeUtils.To3DAttributes(transform.position));
-            instance.release();
         }
 
         public float GetDominantLayerIndex()
@@ -65,8 +87,6 @@ namespace FMODExtensions
             }
             string textureName = ThisTerrainData.terrainLayers[mostDominantLayerIndex].name;
             LayerNameToFMODMaterialIDMap.TryGetValue(textureName, out float FMODMaterialID);
-            Debug.Log("dominate layer = " + textureName);
-
             return FMODMaterialID;
         }
 
