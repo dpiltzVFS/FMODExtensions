@@ -2,6 +2,7 @@
 //to do - use parameterIDs instead of names
 //to do - reduce FMODUpdate frequency
 //to do - add support for on movement inside colliders
+//to do - take height of details into account and stop playing sound when jumping
 
 using UnityEngine;
 using FMODUnity;
@@ -11,7 +12,7 @@ namespace FMODExtensions
     {
         [SerializeField] Terrain ThisTerrain;
         [SerializeField] EventReference FoliageMovement;
-        [SerializeField] float FMODParameterUpdateRate;
+        
         TerrainData ThisTerrainData => ThisTerrain.terrainData;
 
         float[,,] _detailWeights;
@@ -104,7 +105,7 @@ namespace FMODExtensions
                 }
 
                 _foliageMovement.setParameterByName("GrassDensity", grassDensity);
-                Debug.Log("density = " + grassDensity);
+                //Debug.Log("density = " + grassDensity);
             }
         }
         private void UpdateFMODDetailParameters()
