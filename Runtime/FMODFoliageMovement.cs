@@ -4,8 +4,9 @@
 //to do - add support for on movement inside colliders
 //to do - take height of details into account and stop playing sound when jumping
 
-using UnityEngine;
 using FMODUnity;
+using UnityEngine;
+using UnityEngine.Playables;
 namespace FMODExtensions
 {
     public class FMODFoliageMovement : MonoBehaviour
@@ -25,6 +26,9 @@ namespace FMODExtensions
 
         int _amountOfDetailLayers;
 
+        FMOD.Studio.PARAMETER_ID localPlayerSpeedParameterID;
+        FMOD.Studio.PARAMETER_ID localPlayerGrassDensityParameterID;
+
         void Start()
         {
             _amountOfDetailLayers = ThisTerrainData.detailPrototypes.Length;
@@ -35,7 +39,6 @@ namespace FMODExtensions
             GetDetailPrototypeData();
             InstancePersistantFMODEvents();
         }
-
         void Update()
         {
             
@@ -59,6 +62,7 @@ namespace FMODExtensions
                 }
             }
         }
+
         private void GetDetailPrototypeData()
         {
             for (int i = 0; i < _amountOfDetailLayers; i++)
@@ -71,10 +75,21 @@ namespace FMODExtensions
             if (!FoliageMovement.IsNull)
             {
                 _foliageMovement = RuntimeManager.CreateInstance(FoliageMovement);
+                localPlayerSpeedParameterID = GetParameterID(_foliageMovement, "LocalPlayerSpeed");
+                localPlayerGrassDensityParameterID = GetParameterID(_foliageMovement, "LocalPlayerGrassDensity");
                 RuntimeManager.AttachInstanceToGameObject(_foliageMovement, gameObject, gameObject.GetComponent<Rigidbody>());
-                _foliageMovement.setParameterByName("GrassDensity", 0);
+                _foliageMovement.setParameterByID(localPlayerGrassDensityParameterID, 0);
                 _foliageMovement.start();
             }
+        }
+
+        public FMOD.Studio.PARAMETER_ID GetParameterID(FMOD.Studio.EventInstance FMODEvent, string parameterName)
+        {
+            FMOD.Studio.EventDescription eventDescription;
+            FMODEvent.getDescription(out eventDescription);
+            FMOD.Studio.PARAMETER_DESCRIPTION parameterDescription;
+            eventDescription.getParameterDescriptionByName(parameterName, out parameterDescription);
+            return parameterDescription.id;
         }
 
         Vector2Int ConvertToDetailmapCoordinates(Vector3 _worldPosition)
@@ -104,13 +119,13 @@ namespace FMODExtensions
                     }
                 }
 
-                _foliageMovement.setParameterByName("GrassDensity", grassDensity);
+                _foliageMovement.setParameterByID(localPlayerGrassDensityParameterID, grassDensity);
                 //Debug.Log("density = " + grassDensity);
             }
         }
         private void UpdateFMODDetailParameters()
-        { 
-            _foliageMovement.setParameterByName("Speed", _rb.linearVelocity.magnitude);
+        {
+            _foliageMovement.setParameterByID(localPlayerSpeedParameterID, _rb.linearVelocity.magnitude);
         }
 
         public float GetSurfaceMaterial(GameObject surfaceObject)
