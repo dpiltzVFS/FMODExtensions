@@ -9,15 +9,11 @@ namespace FMODExtensions
         TerrainData ThisTerrainData => thisTerrain.terrainData;
         float[,,] _cachedTerrainAlphamapData;
 
-        Dictionary<string, float> LayerNameToFMODMaterialIDMap = new Dictionary<string, float>();
+        public FMODStringToIDMap _TerrianLayerNameToFMODMaterialIDMap;
 
         private void Start()
         {
             _cachedTerrainAlphamapData = ThisTerrainData.GetAlphamaps(0, 0, ThisTerrainData.alphamapWidth, ThisTerrainData.alphamapHeight);
-            LayerNameToFMODMaterialIDMap.Add("0_Rock", 0f);
-            LayerNameToFMODMaterialIDMap.Add("1_Soil", 3f);
-            LayerNameToFMODMaterialIDMap.Add("2_Moss", 5f);
-            LayerNameToFMODMaterialIDMap.Add("3_Mud", 2f);
         }
 
         public override void PlayFootstep(GameObject floorObject, bool overTerrain, float speed)
@@ -86,7 +82,7 @@ namespace FMODExtensions
                 }
             }
             string textureName = ThisTerrainData.terrainLayers[mostDominantLayerIndex].name;
-            LayerNameToFMODMaterialIDMap.TryGetValue(textureName, out float FMODMaterialID);
+            _TerrianLayerNameToFMODMaterialIDMap.map.TryGetValue(textureName, out float FMODMaterialID);
             return FMODMaterialID;
         }
 
